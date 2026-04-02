@@ -1,5 +1,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const isHandDetected = ref(false);
 const isCameraActive = ref(false);
@@ -62,7 +65,7 @@ onUnmounted(() => {
     <header class="safe-area-inset-top bg-surface shadow-sm relative">
       <div class="px-6 py-4">
         <h1 class="text-xl font-bold text-center text-primary">
-          Camera Recognition
+          {{ t("camera.title") }}
         </h1>
 
         <!-- Badge de Hand Detected -->
@@ -71,7 +74,7 @@ onUnmounted(() => {
             <div
               class="w-2 h-2 bg-success rounded-full mr-2 animate-pulse"
             ></div>
-            Hand Detected
+            {{ t("camera.handDetected") }}
           </div>
         </div>
       </div>
@@ -91,7 +94,7 @@ onUnmounted(() => {
           >
             <div class="text-center">
               <div class="text-6xl mb-4 opacity-50">📷</div>
-              <p class="text-gray-500">Camera Preview</p>
+              <p class="text-gray-500">{{ t("camera.cameraPreview") }}</p>
             </div>
           </div>
 
@@ -105,7 +108,7 @@ onUnmounted(() => {
               <p
                 class="text-white bg-black bg-opacity-50 px-3 py-1 rounded text-sm"
               >
-                Camera Active
+                {{ t("camera.cameraActive") }}
               </p>
             </div>
           </div>
@@ -116,14 +119,16 @@ onUnmounted(() => {
               v-if="isHandDetected"
               class="bg-success bg-opacity-90 text-white px-3 py-2 rounded-lg text-center"
             >
-              <div class="font-medium">✋ Gesture Detected</div>
+              <div class="font-medium">{{ t("camera.gestureDetected") }}</div>
             </div>
           </div>
         </div>
 
         <!-- Resultado del reconocimiento -->
         <div v-if="recognizedText" class="card mb-6">
-          <h3 class="font-semibold text-text mb-2">Recognized Text:</h3>
+          <h3 class="font-semibold text-text mb-2">
+            {{ t("camera.recognizedText") }}
+          </h3>
           <div class="bg-background rounded-lg p-4">
             <p class="text-2xl font-bold text-primary">{{ recognizedText }}</p>
           </div>
@@ -140,25 +145,31 @@ onUnmounted(() => {
                 : 'btn-primary',
             ]"
           >
-            {{ isCameraActive ? "Stop Camera" : "Start Camera" }}
+            {{
+              isCameraActive ? t("camera.stopCamera") : t("camera.startCamera")
+            }}
           </button>
 
           <div class="grid grid-cols-2 gap-4">
-            <button class="btn-secondary py-3">Save Result</button>
-            <button class="btn-secondary py-3">Clear</button>
+            <button class="btn-secondary py-3">
+              {{ t("camera.saveResult") }}
+            </button>
+            <button class="btn-secondary py-3">
+              {{ t("camera.clear") }}
+            </button>
           </div>
         </div>
 
         <!-- Tips de uso -->
         <div class="mt-6 p-4 bg-secondary bg-opacity-10 rounded-lg">
           <h4 class="font-medium text-text mb-2">
-            💡 Tips for better recognition:
+            {{ t("camera.tips.title") }}
           </h4>
           <ul class="text-sm text-gray-600 space-y-1">
-            <li>• Keep your hand clearly visible</li>
-            <li>• Use good lighting</li>
-            <li>• Move slowly and clearly</li>
-            <li>• Hold gestures for 2-3 seconds</li>
+            <li>{{ t("camera.tips.keepVisible") }}</li>
+            <li>{{ t("camera.tips.goodLighting") }}</li>
+            <li>{{ t("camera.tips.moveSlowly") }}</li>
+            <li>{{ t("camera.tips.holdGestures") }}</li>
           </ul>
         </div>
       </div>

@@ -1,5 +1,6 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import { useI18n } from "vue-i18n";
 
 // Componentes de vistas
 import HomeView from "./views/HomeView.vue";
@@ -7,36 +8,39 @@ import CameraView from "./views/CameraView.vue";
 import GuideView from "./views/GuideView.vue";
 import AboutView from "./views/AboutView.vue";
 
+// i18n
+const { t, locale } = useI18n();
+
 // Estado de navegación
 const currentView = ref("home");
 
 // Datos de navegación
-const navItems = [
+const navItems = computed(() => [
   {
     id: "home",
-    label: "Home",
+    label: t("nav.home"),
     icon: "🏠",
     component: HomeView,
   },
   {
     id: "camera",
-    label: "Camera",
+    label: t("nav.camera"),
     icon: "📷",
     component: CameraView,
   },
   {
     id: "guide",
-    label: "Guide",
+    label: t("nav.guide"),
     icon: "📖",
     component: GuideView,
   },
   {
     id: "about",
-    label: "About",
+    label: t("nav.about"),
     icon: "ℹ️",
     component: AboutView,
   },
-];
+]);
 
 // Funciones de navegación
 const setActiveView = (viewId) => {
@@ -44,13 +48,46 @@ const setActiveView = (viewId) => {
 };
 
 const getCurrentComponent = () => {
-  const activeItem = navItems.find((item) => item.id === currentView.value);
+  const activeItem = navItems.value.find(
+    (item) => item.id === currentView.value,
+  );
   return activeItem ? activeItem.component : HomeView;
 };
+
+// Toggle de idioma
+const toggleLanguage = () => {
+  locale.value = locale.value === "es" ? "en" : "es";
+};
+
+const currentLanguageFlag = computed(() => {
+  return locale.value === "es" ? "🇪🇸" : "🇺🇸";
+});
 </script>
 
 <template>
   <div class="min-h-screen bg-background flex flex-col safe-area-inset-top">
+    <!-- Header con toggle de idioma -->
+    <header class="bg-surface border-b border-gray-200 px-4 py-3">
+      <div class="flex items-center justify-between max-w-4xl mx-auto">
+        <div class="flex items-center space-x-3">
+          <div class="text-2xl">🤟</div>
+          <h1 class="text-lg font-bold text-primary">{{ t("home.title") }}</h1>
+        </div>
+
+        <!-- Language Toggle -->
+        <button
+          @click="toggleLanguage"
+          class="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+          :title="`${locale === 'es' ? 'Cambiar a English' : 'Switch to Español'}`"
+        >
+          <span class="text-lg">{{ currentLanguageFlag }}</span>
+          <span class="text-sm font-medium text-gray-700">
+            {{ locale === "es" ? "ES" : "EN" }}
+          </span>
+        </button>
+      </div>
+    </header>
+
     <!-- Contenido principal -->
     <main class="flex-1 overflow-y-auto">
       <component :is="getCurrentComponent()" />
