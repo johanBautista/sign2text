@@ -1,5 +1,6 @@
 {
-  "appId": "com.johan.sign2text",
-  "appName": "sign2text",
-  "webDir": "www"
+  "appId": "com.sign2text.app",
+  "appName": "Sign2Text",
+  "webDir": "dist",
+  "bundledWebRuntime": false
 }
