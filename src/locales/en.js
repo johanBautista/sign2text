@@ -127,7 +127,7 @@ export default {
       title: "Contact & Support",
       email: {
         title: "Email Support",
-        address: "support@sign2text.app",
+        address: "support{'@'}sign2text.app",
       },
       issues: {
         title: "Report Issues",
