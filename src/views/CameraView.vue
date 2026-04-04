@@ -11,9 +11,22 @@ const cameraStream = ref(null);
 
 const startCamera = async () => {
   try {
+    // Verificar si getUserMedia está disponible
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.error("getUserMedia is not supported on this device");
+      return;
+    }
+
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { width: 640, height: 480, facingMode: "user" },
+      video: {
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+        facingMode: "user",
+        // Configuraciones adicionales para móviles
+        frameRate: { ideal: 30, max: 60 },
+      },
     });
+
     cameraStream.value = stream;
     isCameraActive.value = true;
 
@@ -28,6 +41,23 @@ const startCamera = async () => {
     }, 4000);
   } catch (error) {
     console.error("Error accessing camera:", error);
+
+    // Manejar diferentes tipos de errores
+    if (error.name === "NotAllowedError") {
+      console.error("Camera permission denied");
+      alert(
+        "Permisos de cámara denegados. Por favor, habilita los permisos en la configuración del dispositivo.",
+      );
+    } else if (error.name === "NotFoundError") {
+      console.error("No camera found");
+      alert("No se encontró cámara en el dispositivo.");
+    } else if (error.name === "NotReadableError") {
+      console.error("Camera already in use");
+      alert("La cámara ya está en uso por otra aplicación.");
+    } else {
+      console.error("Unknown camera error:", error);
+      alert("Error al acceder a la cámara: " + error.message);
+    }
   }
 };
 
