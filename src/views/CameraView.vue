@@ -93,7 +93,10 @@ onUnmounted(() => {
             class="absolute inset-0 flex items-center justify-center bg-gray-100"
           >
             <div class="text-center">
-              <div class="text-6xl mb-4 opacity-50">📷</div>
+              <font-awesome-icon
+                icon="camera"
+                class="text-6xl mb-4 opacity-50 text-gray-400"
+              />
               <p class="text-gray-500">{{ t("camera.cameraPreview") }}</p>
             </div>
           </div>
@@ -104,7 +107,10 @@ onUnmounted(() => {
             class="absolute inset-0 flex items-center justify-center bg-primary bg-opacity-10"
           >
             <div class="text-center">
-              <div class="text-6xl mb-4 animate-pulse">📹</div>
+              <font-awesome-icon
+                icon="video"
+                class="text-6xl mb-4 animate-pulse text-primary"
+              />
               <p
                 class="text-white bg-black bg-opacity-50 px-3 py-1 rounded text-sm"
               >

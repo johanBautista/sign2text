@@ -19,25 +19,25 @@ const navItems = computed(() => [
   {
     id: "home",
     label: t("nav.home"),
-    icon: "🏠",
+    icon: "home",
     component: HomeView,
   },
   {
     id: "camera",
     label: t("nav.camera"),
-    icon: "📷",
+    icon: "camera",
     component: CameraView,
   },
   {
     id: "guide",
     label: t("nav.guide"),
-    icon: "📖",
+    icon: "book",
     component: GuideView,
   },
   {
     id: "about",
     label: t("nav.about"),
-    icon: "ℹ️",
+    icon: "info-circle",
     component: AboutView,
   },
 ]);
@@ -70,7 +70,7 @@ const currentLanguageFlag = computed(() => {
     <header class="bg-surface border-b border-gray-200 px-4 py-3">
       <div class="flex items-center justify-between max-w-4xl mx-auto">
         <div class="flex items-center space-x-3">
-          <div class="text-2xl">🤟</div>
+          <font-awesome-icon icon="hand-paper" class="text-2xl text-primary" />
           <h1 class="text-lg font-bold text-primary">{{ t("home.title") }}</h1>
         </div>
 
@@ -106,7 +106,7 @@ const currentLanguageFlag = computed(() => {
             inactive: currentView !== item.id,
           }"
         >
-          <span class="text-2xl mb-1">{{ item.icon }}</span>
+          <font-awesome-icon :icon="item.icon" class="text-xl mb-1" />
           <span class="text-xs font-medium">{{ item.label }}</span>
         </button>
       </div>

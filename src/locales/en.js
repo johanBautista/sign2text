@@ -39,14 +39,14 @@ export default {
     handDetected: "Hand Detected",
     cameraPreview: "Camera Preview",
     cameraActive: "Camera Active",
-    gestureDetected: "✋ Gesture Detected",
+    gestureDetected: "Gesture Detected",
     recognizedText: "Recognized Text:",
     stopCamera: "Stop Camera",
     startCamera: "Start Camera",
     saveResult: "Save Result",
     clear: "Clear",
     tips: {
-      title: "💡 Tips for better recognition:",
+      title: "Tips for better recognition:",
       keepVisible: "• Keep your hand clearly visible",
       goodLighting: "• Use good lighting",
       moveSlowly: "• Move slowly and clearly",
@@ -64,14 +64,14 @@ export default {
     practiceTips: {
       title: "Quick Practice Tips",
       learning: {
-        title: "📚 Learning Tips:",
+        title: "Learning Tips:",
         slow: "• Practice each letter slowly",
         shape: "• Focus on hand shape first",
         mirror: "• Use a mirror for feedback",
         daily: "• Practice daily for muscle memory",
       },
       mistakes: {
-        title: "✨ Common Mistakes:",
+        title: "Common Mistakes:",
         thumb: "• Forgetting thumb position",
         fast: "• Moving too quickly",
         finger: "• Incorrect finger placement",
@@ -79,14 +79,14 @@ export default {
       },
     },
     readyToPractice: "Ready to practice with the camera?",
-    goToCamera: "Go to Camera 📷",
+    goToCamera: "Go to Camera",
   },
 
   // About View
   about: {
     title: "About Sign2Text",
     mission: {
-      title: "🎯 Our Mission",
+      title: "Our Mission",
       description:
         "Sign2Text is dedicated to breaking down communication barriers and creating an inclusive world where everyone can connect seamlessly. We believe that technology should empower people with hearing disabilities and promote understanding between deaf and hearing communities.",
     },
@@ -109,10 +109,10 @@ export default {
       },
     },
     technology: {
-      title: "🔧 Technology",
+      title: "Technology",
     },
     team: {
-      title: "👥 Development Team",
+      title: "Development Team",
       description:
         "This application was created as part of a university project focused on inclusive technology and accessibility.",
       specialThanks: "Special Thanks To:",
@@ -124,7 +124,7 @@ export default {
       },
     },
     contact: {
-      title: "📞 Contact & Support",
+      title: "Contact & Support",
       email: {
         title: "Email Support",
         address: "support@sign2text.app",

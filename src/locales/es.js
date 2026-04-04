@@ -39,14 +39,14 @@ export default {
     handDetected: "Mano Detectada",
     cameraPreview: "Vista Previa de Cámara",
     cameraActive: "Cámara Activa",
-    gestureDetected: "✋ Gesto Detectado",
+    gestureDetected: "Gesto Detectado",
     recognizedText: "Texto Reconocido:",
     stopCamera: "Detener Cámara",
     startCamera: "Iniciar Cámara",
     saveResult: "Guardar Resultado",
     clear: "Limpiar",
     tips: {
-      title: "💡 Consejos para mejor reconocimiento:",
+      title: "Consejos para mejor reconocimiento:",
       keepVisible: "• Mantén tu mano claramente visible",
       goodLighting: "• Usa buena iluminación",
       moveSlowly: "• Muévete lenta y claramente",
@@ -64,14 +64,14 @@ export default {
     practiceTips: {
       title: "Consejos de Práctica Rápida",
       learning: {
-        title: "📚 Consejos de Aprendizaje:",
+        title: "Consejos de Aprendizaje:",
         slow: "• Practica cada letra lentamente",
         shape: "• Enfócate primero en la forma de la mano",
         mirror: "• Usa un espejo para retroalimentación",
         daily: "• Practica diariamente para memoria muscular",
       },
       mistakes: {
-        title: "✨ Errores Comunes:",
+        title: "Errores Comunes:",
         thumb: "• Olvidar la posición del pulgar",
         fast: "• Moverse muy rápido",
         finger: "• Colocación incorrecta de dedos",
@@ -79,14 +79,14 @@ export default {
       },
     },
     readyToPractice: "¿Listo para practicar con la cámara?",
-    goToCamera: "Ir a Cámara 📷",
+    goToCamera: "Ir a Cámara",
   },
 
   // Vista About
   about: {
     title: "Acerca de Sign2Text",
     mission: {
-      title: "🎯 Nuestra Misión",
+      title: "Nuestra Misión",
       description:
         "Sign2Text se dedica a romper las barreras de comunicación y crear un mundo inclusivo donde todos puedan conectarse sin problemas. Creemos que la tecnología debe empoderar a las personas con discapacidades auditivas y promover el entendimiento entre las comunidades sordas y oyentes.",
     },
@@ -109,10 +109,10 @@ export default {
       },
     },
     technology: {
-      title: "🔧 Tecnología",
+      title: "Tecnología",
     },
     team: {
-      title: "👥 Equipo de Desarrollo",
+      title: "Equipo de Desarrollo",
       description:
         "Esta aplicación fue creada como parte de un proyecto universitario enfocado en tecnología inclusiva y accesibilidad.",
       specialThanks: "Agradecimientos Especiales:",
@@ -124,7 +124,7 @@ export default {
       },
     },
     contact: {
-      title: "📞 Contacto y Soporte",
+      title: "Contacto y Soporte",
       email: {
         title: "Soporte por Email",
         address: "support@sign2text.app",

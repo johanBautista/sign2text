@@ -24,7 +24,7 @@ const learnAlphabet = () => {
         <div
           class="w-32 h-32 mx-auto bg-secondary bg-opacity-20 rounded-full flex items-center justify-center"
         >
-          <span class="text-6xl">🤟</span>
+          <font-awesome-icon icon="hand-paper" class="text-6xl text-primary" />
         </div>
       </div>
 
@@ -60,7 +60,10 @@ const learnAlphabet = () => {
     <section class="px-6 py-8">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
         <div class="card text-center">
-          <div class="text-3xl mb-3">⚡</div>
+          <font-awesome-icon
+            icon="bolt"
+            class="text-3xl mb-3 text-yellow-500"
+          />
           <h3 class="font-semibold text-text mb-2">
             {{ t("home.features.realTime.title") }}
           </h3>
@@ -70,7 +73,10 @@ const learnAlphabet = () => {
         </div>
 
         <div class="card text-center">
-          <div class="text-3xl mb-3">♿</div>
+          <font-awesome-icon
+            icon="universal-access"
+            class="text-3xl mb-3 text-blue-500"
+          />
           <h3 class="font-semibold text-text mb-2">
             {{ t("home.features.accessible.title") }}
           </h3>
@@ -80,7 +86,10 @@ const learnAlphabet = () => {
         </div>
 
         <div class="card text-center">
-          <div class="text-3xl mb-3">🌍</div>
+          <font-awesome-icon
+            icon="globe"
+            class="text-3xl mb-3 text-green-500"
+          />
           <h3 class="font-semibold text-text mb-2">
             {{ t("home.features.inclusive.title") }}
           </h3>
