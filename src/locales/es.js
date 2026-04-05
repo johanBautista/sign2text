@@ -37,6 +37,7 @@ export default {
   camera: {
     title: "Reconocimiento por Cámara",
     handDetected: "Mano Detectada",
+    handStatus: "Estado de la Mano",
     cameraPreview: "Vista Previa de Cámara",
     cameraActive: "Cámara Activa",
     gestureDetected: "Gesto Detectado",
