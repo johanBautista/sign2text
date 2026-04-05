@@ -1,17 +1,20 @@
 <script setup>
-import { ref } from "vue";
+import { ref, inject } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
 
+// Inyectar función de navegación desde App.vue
+const setActiveView = inject("setActiveView");
+
 const startRecognition = () => {
-  console.log("Iniciando reconocimiento de lenguaje de señas...");
-  // Aquí se implementaría la lógica de la cámara
+  console.log("Navegando a la vista de cámara...");
+  setActiveView("camera");
 };
 
 const learnAlphabet = () => {
-  console.log("Navegando al alfabeto de señas...");
-  // Esto podría navegar a la vista Guide
+  console.log("Navegando a la vista de guía...");
+  setActiveView("guide");
 };
 </script>
 

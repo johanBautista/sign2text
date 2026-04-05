@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, provide } from "vue";
 import { useI18n } from "vue-i18n";
 
 // Componentes de vistas
@@ -46,6 +46,9 @@ const navItems = computed(() => [
 const setActiveView = (viewId) => {
   currentView.value = viewId;
 };
+
+// Proporcionar función de navegación a componentes hijos
+provide("setActiveView", setActiveView);
 
 const getCurrentComponent = () => {
   const activeItem = navItems.value.find(
