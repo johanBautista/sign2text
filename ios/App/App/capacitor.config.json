@@ -1,0 +1,26 @@
+{
+	"appId": "com.sign2text.app",
+	"appName": "Sign2Text",
+	"webDir": "dist",
+	"bundledWebRuntime": false,
+	"plugins": {
+		"Camera": {
+			"permissions": [
+				"camera",
+				"photos"
+			]
+		}
+	},
+	"android": {
+		"permissions": [
+			"android.permission.CAMERA",
+			"android.permission.RECORD_AUDIO",
+			"android.permission.WRITE_EXTERNAL_STORAGE"
+		]
+	},
+	"packageClassList": [
+		"HapticsPlugin",
+		"LocalNotificationsPlugin",
+		"PreferencesPlugin"
+	]
+}

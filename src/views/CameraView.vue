@@ -18,6 +18,8 @@ const fingersExtended = ref([0, 0, 0, 0, 0]); // [pulgar, índice, medio, anular
 const gestureConfidence = ref(0);
 const detectedLetter = ref("");
 const showLandmarkNumbers = ref(true); // Para debug visual
+const savedWord = ref(""); // Palabra construida con letras guardadas
+const saveAnimation = ref(false); // Para animación de guardado
 
 // Instancias de MediaPipe
 let hands = null;
@@ -80,24 +82,36 @@ const initializeMediaPipe = async () => {
   }
 };
 
-// Función para reconocer letras basadas en patrones de dedos
+// Función para reconocer letras basadas en patrones de dedos (Lenguaje de señas español)
 const recognizeLetter = (fingers) => {
   const pattern = fingers.join("");
 
   const letterPatterns = {
+    10000: "A", // Puño con pulgar arriba
+    "01000": "D", // Índice arriba, resto cerrado
+    "01100": "K", // Índice y medio arriba (V apuntando arriba)
+    "01110": "W", // Índice, medio y anular arriba
+    11111: "B", // Todos los dedos arriba (palma abierta)
+    "00000": "S", // Puño cerrado con pulgar encima
+    10001: "Y", // Pulgar y meñique extendidos
+    11000: "L", // Pulgar e índice en forma de L
     "00001": "I", // Solo meñique
-    "00011": "V", // Anular + meñique
-    "00111": "W", // Medio + anular + meñique
-    "01111": "4", // Todos menos pulgar
-    11111: "5", // Todos los dedos
-    10000: "A", // Solo pulgar
-    "01000": "1", // Solo índice
-    "01100": "2", // Índice + medio
-    "01110": "3", // Índice + medio + anular
-    "00000": "S", // Puño cerrado
-    10001: "Y", // Pulgar + meñique
-    "01010": "U", // Índice + anular
-    10100: "L", // Pulgar + medio
+    "01101": "F", // Índice, medio y meñique (forma F)
+    "01010": "U", // Índice y anular arriba juntos
+    "01001": "J", // Meñique e índice (J se hace con meñique)
+    "00100": "G", // Solo dedo medio
+    "00010": "H", // Solo anular
+    10100: "R", // Pulgar y medio (R: índice y medio cruzados - simplificado)
+    10111: "C", // Pulgar y 3 dedos (forma C curvada - simplificado)
+    11001: "E", // Pulgar e índice+meñique (puño con pulgar metido - simplificado)
+    11110: "N", // Todos menos meñique
+    11101: "M", // Todos menos anular
+    "01011": "P", // Índice, anular y meñique
+    "00110": "Q", // Medio y anular
+    "00101": "T", // Medio y meñique (puño con pulgar entre dedos - simplificado)
+    "01111": "V", // Índice, medio, anular, meñique (V con 4 dedos)
+    11011: "X", // Pulgar, índice y meñique (índice doblado - simplificado)
+    11100: "Z", // Pulgar, índice y medio (Z con movimiento - simplificado)
   };
 
   const letter = letterPatterns[pattern];
@@ -289,30 +303,21 @@ const drawHandAnnotations = (landmarks) => {
     }
   });
 
-  // Panel de información en canvas (menos intrusivo)
-  canvasCtx.fillStyle = "rgba(0, 0, 0, 0.7)";
-  canvasCtx.fillRect(10, canvasHeight - 90, 250, 80);
+  // Panel de información en canvas (solo letra)
+  if (detectedLetter.value) {
+    canvasCtx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    canvasCtx.fillRect(10, canvasHeight - 40, 120, 30);
 
-  canvasCtx.fillStyle = "#ffffff";
-  canvasCtx.font = "bold 14px Arial";
-  canvasCtx.textAlign = "left";
-  canvasCtx.textBaseline = "top";
-  canvasCtx.fillText(
-    `Dedos: [${fingersExtended.value.join(",")}]`,
-    20,
-    canvasHeight - 80,
-  );
-  canvasCtx.fillText(
-    `Letra: ${detectedLetter.value || "ninguna"}`,
-    20,
-    canvasHeight - 60,
-  );
-  canvasCtx.fillText(
-    `Confianza: ${gestureConfidence.value}%`,
-    20,
-    canvasHeight - 40,
-  );
-  canvasCtx.fillText(`Landmarks: ${landmarks.length}`, 20, canvasHeight - 20);
+    canvasCtx.fillStyle = "#ffffff";
+    canvasCtx.font = "bold 20px Arial";
+    canvasCtx.textAlign = "center";
+    canvasCtx.textBaseline = "middle";
+    canvasCtx.fillText(
+      detectedLetter.value,
+      canvasCtx.measureText(detectedLetter.value).width / 2 + 10,
+      canvasHeight - 25,
+    );
+  }
 };
 
 const startCamera = async () => {
@@ -335,7 +340,7 @@ const startCamera = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         width: { ideal: 640 },
-        height: { ideal: 480 },
+        height: { ideal: 700 },
         facingMode: "user",
         frameRate: { ideal: 30, max: 60 },
       },
@@ -358,7 +363,7 @@ const startCamera = async () => {
             }
           },
           width: 640,
-          height: 480,
+          height: 700,
         });
         await camera.start();
       } else {
@@ -487,6 +492,28 @@ const toggleCamera = () => {
   }
 };
 
+// Guardar letra detectada para formar una palabra
+const saveResult = () => {
+  if (detectedLetter.value) {
+    savedWord.value += detectedLetter.value;
+    // Activar animación de guardado
+    saveAnimation.value = true;
+    setTimeout(() => {
+      saveAnimation.value = false;
+    }, 500);
+  }
+};
+
+// Agregar espacio para separar palabras
+const addSpace = () => {
+  savedWord.value += " ";
+};
+
+// Limpiar la palabra guardada
+const clearWord = () => {
+  savedWord.value = "";
+};
+
 // Lifecycles
 onMounted(async () => {
   await nextTick();
@@ -525,7 +552,7 @@ onUnmounted(() => {
         <!-- Container de cámara con video y canvas -->
         <div
           ref="containerElement"
-          class="relative bg-black rounded-2xl overflow-hidden aspect-video mb-6 shadow-lg"
+          class="relative bg-black rounded-2xl overflow-hidden aspect-[3/4] h-96 mb-6 shadow-lg"
         >
           <!-- Video element -->
           <video
@@ -570,37 +597,46 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Overlay superior con información -->
-          <div v-if="isCameraActive" class="absolute top-4 left-4 right-4 z-30">
-            <div class="flex justify-between items-center">
-              <!-- Indicador de mano detectada -->
-              <div v-if="isHandDetected" class="badge-success">
-                <div
-                  class="w-2 h-2 bg-success rounded-full mr-2 animate-pulse"
-                ></div>
-                {{ t("camera.handDetected") }}
-              </div>
-
-              <!-- Score de confianza -->
-              <div
-                v-if="gestureConfidence > 0"
-                class="bg-black bg-opacity-70 text-white px-3 py-1 rounded-lg text-sm"
-              >
-                {{ gestureConfidence }}% confianza
-              </div>
-
-              <!-- Letra detectada -->
-              <div
-                v-if="detectedLetter"
-                class="bg-success bg-opacity-90 text-white px-3 py-1 rounded-lg font-bold text-lg"
-              >
-                Letra: {{ detectedLetter }}
-              </div>
+          <!-- Overlay superior con letra detectada -->
+          <div
+            v-if="isCameraActive && detectedLetter"
+            class="absolute top-4 left-4 right-4 z-30 flex justify-center"
+          >
+            <div
+              class="bg-success bg-opacity-90 text-white px-4 py-2 rounded-lg font-bold text-2xl"
+            >
+              {{ detectedLetter }}
             </div>
           </div>
 
-          <!-- Debug controls overlay -->
-          <div v-if="isCameraActive" class="absolute top-4 left-4 z-30">
+          <!-- Botones dentro del canvas (abajo centrado) -->
+          <div
+            v-if="isCameraActive && detectedLetter"
+            class="absolute bottom-16 left-4 right-4 z-30 flex justify-center space-x-4"
+          >
+            <button
+              @click="saveResult"
+              :class="[
+                'px-2 py-2 rounded-lg font-bold text-lg transition-all shadow-lg',
+                saveAnimation
+                  ? 'bg-blue-500 text-white scale-110'
+                  : 'bg-success text-white hover:bg-opacity-90',
+              ]"
+            >
+              <font-awesome-icon icon="plus" class="mr-2" />
+              {{ saveAnimation ? "¡Guardado!" : "Guardar" }}
+            </button>
+            <button
+              @click="addSpace"
+              class="bg-white bg-opacity-90 text-gray-800 px-2 py-2 rounded-lg font-bold text-lg hover:bg-opacity-100 transition-all shadow-lg"
+            >
+              <font-awesome-icon icon="space-arrow-right" class="mr-2" />
+              Espacio
+            </button>
+          </div>
+
+          <!-- Debug controls overlay (abajo a la izquierda) -->
+          <div v-if="isCameraActive" class="absolute bottom-4 left-4 z-30">
             <button
               @click="showLandmarkNumbers = !showLandmarkNumbers"
               class="bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs hover:bg-opacity-90 transition-all"
@@ -608,39 +644,12 @@ onUnmounted(() => {
               {{ showLandmarkNumbers ? "Ocultar" : "Mostrar" }} puntos
             </button>
           </div>
-
-          <!-- Overlay inferior con estado de dedos -->
-          <div
-            v-if="isHandDetected"
-            class="absolute bottom-4 left-4 right-4 z-30"
-          >
-            <div class="bg-black bg-opacity-80 rounded-lg p-3 text-white">
-              <div class="flex justify-center space-x-4 mb-2">
-                <div
-                  v-for="(finger, index) in fingersExtended"
-                  :key="index"
-                  class="flex flex-col items-center"
-                >
-                  <div
-                    :class="[
-                      'w-8 h-8 rounded-full flex items-center justify-center mb-1 transition-colors duration-200',
-                      finger === 1
-                        ? 'bg-success text-white'
-                        : 'bg-gray-600 text-gray-300',
-                    ]"
-                  >
-                    {{ finger }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Dashboard de detección -->
         <div
           v-if="isCameraActive"
-          class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
+          class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"
         >
           <!-- Estado de la mano -->
           <div class="card">
@@ -667,12 +676,6 @@ onUnmounted(() => {
                   >{{ gestureConfidence }}%</span
                 >
               </div>
-              <div class="flex justify-between">
-                <span class="text-gray-600">Dedos activos:</span>
-                <span class="font-medium text-secondary">
-                  {{ fingersExtended.reduce((a, b) => a + b, 0) }}/5
-                </span>
-              </div>
             </div>
           </div>
 
@@ -697,75 +700,20 @@ onUnmounted(() => {
               </div>
             </div>
           </div>
-
-          <!-- Array de dedos  -->
-          <div class="card">
-            <h3 class="font-semibold text-text mb-3 flex items-center">
-              <font-awesome-icon
-                icon="hand-paper"
-                class="mr-2 text-secondary"
-              />
-              Array de Dedos
-            </h3>
-            <div class="bg-background rounded-lg p-3">
-              <div class="text-sm text-gray-600 mb-2">Patrón binario:</div>
-              <div class="font-mono text-lg font-bold text-primary">
-                [{{ fingersExtended.join(", ") }}]
-              </div>
-              <div class="text-xs text-gray-500 mt-1">👍 ☝️ 🖕 💍 🤏</div>
-            </div>
-          </div>
         </div>
 
         <!-- Resultado del reconocimiento -->
-        <div v-if="recognizedText || detectedLetter" class="card mb-6">
+        <div v-if="detectedLetter" class="card mb-6">
           <h3 class="font-semibold text-text mb-2 flex items-center">
             <font-awesome-icon icon="lightbulb" class="mr-2 text-warning" />
             {{ t("camera.recognizedText") }}
           </h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Resultado principal -->
-            <div class="bg-background rounded-lg p-4">
-              <div class="text-center">
-                <p class="text-4xl font-bold text-primary mb-2">
-                  {{ detectedLetter || recognizedText }}
-                </p>
-                <div class="text-sm text-gray-600">
-                  {{
-                    detectedLetter
-                      ? "Letra del alfabeto ASL"
-                      : "Número por conteo de dedos"
-                  }}
-                </div>
-              </div>
-            </div>
-
-            <!-- Información de debug -->
-            <div class="bg-gray-50 rounded-lg p-4 text-sm">
-              <div class="space-y-2">
-                <div>
-                  <span class="font-medium">Patrón:</span>
-                  <span class="font-mono ml-2"
-                    >[{{ fingersExtended.join(",") }}]</span
-                  >
-                </div>
-                <div>
-                  <span class="font-medium">Dedos extendidos:</span>
-                  <span class="ml-2"
-                    >{{ fingersExtended.reduce((a, b) => a + b, 0) }}/5</span
-                  >
-                </div>
-                <div>
-                  <span class="font-medium">Confianza:</span>
-                  <span class="ml-2">{{ gestureConfidence }}%</span>
-                </div>
-                <div>
-                  <span class="font-medium">Estado landmarks:</span>
-                  <span class="ml-2 text-success">{{
-                    showLandmarkNumbers ? "👁️ Visibles" : "👁️‍🗨️ Ocultos"
-                  }}</span>
-                </div>
-              </div>
+          <div class="bg-background rounded-lg p-4 text-center">
+            <p class="text-4xl font-bold text-primary mb-2">
+              {{ detectedLetter }}
+            </p>
+            <div class="text-sm text-gray-600">
+              Confianza: {{ gestureConfidence }}%
             </div>
           </div>
         </div>
@@ -787,12 +735,27 @@ onUnmounted(() => {
           </button>
 
           <div class="grid grid-cols-2 gap-4">
-            <button class="btn-secondary py-3">
+            <button @click="saveResult" class="btn-secondary py-3">
               {{ t("camera.saveResult") }}
             </button>
-            <button class="btn-secondary py-3">
+            <button @click="clearWord" class="btn-secondary py-3">
               {{ t("camera.clear") }}
             </button>
+          </div>
+
+          <!-- Palabra construida -->
+          <div v-if="savedWord" class="card mb-6">
+            <h3 class="font-semibold text-text mb-2 flex items-center">
+              <font-awesome-icon icon="font" class="mr-2 text-primary" />
+              Texto acumulado:
+            </h3>
+            <div class="bg-background rounded-lg p-4 max-h-32 overflow-y-auto">
+              <p
+                class="text-lg font-bold text-primary break-words whitespace-pre-wrap"
+              >
+                {{ savedWord }}
+              </p>
+            </div>
           </div>
         </div>
 
