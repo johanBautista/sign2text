@@ -66,6 +66,13 @@ Una aplicación web responsiva que traduce lenguaje de señas a texto en tiempo 
 - **Diseño:** Mobile-first responsive design
 - **Fuentes:** Google Fonts (Inter)
 
+## 📐 Arquitectura del Sistema y Flujo de Datos (Edge Computing)
+
+A continuación se muestra cómo interactúan el hardware, el motor de Inteligencia Artificial en local y la reactividad de Vue 3 en el dispositivo móvil:
+
+<img width="512" height="768" alt="ChatGPT Image 15 may 2026, 23_21_23" src="https://github.com/user-attachments/assets/be34bf77-66ef-435f-beb5-546ad0263bee" />
+
+
 ## 📦 Instalación y Desarrollo
 
 ```bash
