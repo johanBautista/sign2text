@@ -122,17 +122,23 @@ src/
 
 ## 🌟 Próximas Características
 
-- [ ] Integración con ML models para reconocimiento real
-- [ ] Soporte para frases completas
 - [ ] Modo práctica con feedback
 - [ ] Múltiples idiomas de señas
 - [ ] Guardado de progreso
 - [ ] Modo offline
 
+## 📦 Repositorio y Código Fuente
+
+El código fuente de este proyecto es público, accesible y se encuentra alojado en el repositorio oficial de GitHub:
+- **Enlace al Repositorio:** [https://github.com/johanBautista/sign2text](https://github.com/johanBautista/sign2text)
+
 ## 📄 Licencia
 
-Sign2Text MVP © 2026 - Proyecto desarrollado con ❤️ para la comunidad sorda y con dificultades auditivas.
+Este proyecto está bajo la **Licencia MIT**. Esto significa que es software libre y permite a cualquier estudiante, desarrollador o investigador reutilizar, modificar y distribuir el código, fomentando la colaboración en herramientas de accesibilidad tecnológica.
+
+Consulta el archivo `LICENSE` en el repositorio para obtener más detalles.
 
 ---
+Sign2Text MVP © 2026 - Proyecto desarrollado con ❤️ para la comunidad
 
 **Empowering Communication. Building Bridges. Creating Inclusion.**
