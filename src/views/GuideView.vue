@@ -4,35 +4,39 @@ import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
 
-// Alfabeto de lenguaje de señas con emojis representativos
+// Alfabeto de lenguaje de señas
 const ALPHABET = [
-  { letter: "A", gesture: "✊" },
-  { letter: "B", gesture: "🖐️" },
-  { letter: "C", gesture: "🤏" },
-  { letter: "D", gesture: "👆" },
-  { letter: "E", gesture: "✊" },
-  { letter: "F", gesture: "👌" },
-  { letter: "G", gesture: "👉" },
-  { letter: "H", gesture: "✌️" },
-  { letter: "I", gesture: "🤘" },
-  { letter: "J", gesture: "🤘" },
-  { letter: "K", gesture: "✌️" },
-  { letter: "L", gesture: "👆" },
-  { letter: "M", gesture: "✊" },
-  { letter: "N", gesture: "✊" },
-  { letter: "O", gesture: "👌" },
-  { letter: "P", gesture: "👆" },
-  { letter: "Q", gesture: "👇" },
-  { letter: "R", gesture: "🤞" },
-  { letter: "S", gesture: "✊" },
-  { letter: "T", gesture: "✊" },
-  { letter: "U", gesture: "✌️" },
-  { letter: "V", gesture: "✌️" },
-  { letter: "W", gesture: "🤟" },
-  { letter: "X", gesture: "👆" },
-  { letter: "Y", gesture: "🤟" },
-  { letter: "Z", gesture: "👆" },
+  { letter: "A" },
+  { letter: "B" },
+  { letter: "C" },
+  { letter: "D" },
+  { letter: "E" },
+  { letter: "F" },
+  { letter: "G" },
+  { letter: "H" },
+  { letter: "I" },
+  { letter: "J" },
+  { letter: "K" },
+  { letter: "L" },
+  { letter: "M" },
+  { letter: "N" },
+  { letter: "O" },
+  { letter: "P" },
+  { letter: "Q" },
+  { letter: "R" },
+  { letter: "S" },
+  { letter: "T" },
+  { letter: "U" },
+  { letter: "V" },
+  { letter: "W" },
+  { letter: "X" },
+  { letter: "Y" },
+  { letter: "Z" },
 ];
+
+const getLetterImage = (letter) => {
+  return new URL(`../assets/alphabet/${letter.toLowerCase()}.jpg`, import.meta.url).href;
+};
 
 const selectedLetter = ref(null);
 
@@ -81,8 +85,12 @@ const getDescription = (letter) => {
               {{ item.letter }}
             </div>
 
-            <!-- Gesto (emoji) -->
-            <div class="text-4xl mb-2">{{ item.gesture }}</div>
+            <!-- Imagen del gesto -->
+            <img
+              :src="getLetterImage(item.letter)"
+              :alt="`Seña letra ${item.letter}`"
+              class="w-full h-16 object-contain mb-2"
+            />
 
             <!-- Indicator de selección -->
             <div
@@ -101,7 +109,11 @@ const getDescription = (letter) => {
             class="card bg-primary bg-opacity-5 border-primary border-2"
           >
             <div class="text-center">
-              <div class="text-6xl mb-4">{{ selectedLetter.gesture }}</div>
+              <img
+                :src="getLetterImage(selectedLetter.letter)"
+                :alt="`Seña letra ${selectedLetter.letter}`"
+                class="w-32 h-32 object-contain mx-auto mb-4"
+              />
               <h2 class="text-3xl font-bold text-primary mb-2">
                 {{ t("guide.letter") }} {{ selectedLetter.letter }}
               </h2>
