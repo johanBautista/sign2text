@@ -5,7 +5,7 @@ import { useI18n } from "vue-i18n";
 const { t } = useI18n();
 
 // Alfabeto de lenguaje de señas con emojis representativos
-const alphabet = [
+const ALPHABET = [
   { letter: "A", gesture: "✊" },
   { letter: "B", gesture: "🖐️" },
   { letter: "C", gesture: "🤏" },
@@ -66,7 +66,7 @@ const getDescription = (letter) => {
         <!-- Grid responsivo del alfabeto -->
         <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
           <div
-            v-for="item in alphabet"
+            v-for="item in ALPHABET"
             :key="item.letter"
             @click="selectLetter(item)"
             class="card cursor-pointer transition-all duration-200 hover:shadow-md transform hover:-translate-y-1 text-center relative"

@@ -86,18 +86,18 @@ const detectFingers = (landmarks) => {
   const fingers = [0, 0, 0, 0, 0];
 
   // Landmarks indices según MediaPipe
-  const tipIds = [4, 8, 12, 16, 20]; // Puntas de los dedos
-  const pipIds = [3, 6, 10, 14, 18]; // Nudillos (PIP joints)
+  const TIP_IDS = [4, 8, 12, 16, 20]; // Puntas de los dedos
+  const PIP_IDS = [3, 6, 10, 14, 18]; // Nudillos (PIP joints)
 
   // Detectar cada dedo
   for (let i = 0; i < 5; i++) {
-    const tipY = hand[tipIds[i]].y;
-    const pipY = hand[pipIds[i]].y;
+    const tipY = hand[TIP_IDS[i]].y;
+    const pipY = hand[PIP_IDS[i]].y;
 
     // Lógica especial para el pulgar (usa X en lugar de Y)
     if (i === 0) {
-      const tipX = hand[tipIds[i]].x;
-      const pipX = hand[pipIds[i]].x;
+      const tipX = hand[TIP_IDS[i]].x;
+      const pipX = hand[PIP_IDS[i]].x;
       // En cámara espejo: pulgar extendido está a la izquierda visualmente
       // En coordenadas: depende de si está escalado
       fingers[i] = Math.abs(tipX - pipX) > 0.05 ? 1 : 0;
@@ -115,7 +115,7 @@ const detectFingers = (landmarks) => {
 const recognizeLetter = (fingers) => {
   const pattern = fingers.join("");
 
-  const letterPatterns = {
+  const LETTER_PATTERNS = {
     "10000": "A", // Puño con pulgar arriba
     "01000": "D", // Índice arriba, resto cerrado
     "01100": "K", // Índice y medio arriba
@@ -143,7 +143,7 @@ const recognizeLetter = (fingers) => {
     "11100": "Z", // Pulgar, índice y medio
   };
 
-  return letterPatterns[pattern] || "";
+  return LETTER_PATTERNS[pattern] || "";
 };
 
 // Callback de MediaPipe
@@ -192,7 +192,7 @@ const onHandsResults = (results) => {
 const drawHandAnnotations = (landmarks) => {
   if (!landmarks || !canvasCtx || !canvasElement.value) return;
 
-  const connections = [
+  const CONNECTIONS = [
     [0, 1], [1, 2], [2, 3], [3, 4],
     [0, 5], [5, 6], [6, 7], [7, 8],
     [5, 9], [9, 10], [10, 11], [11, 12],
@@ -207,7 +207,7 @@ const drawHandAnnotations = (landmarks) => {
   canvasCtx.strokeStyle = "#55b491";
   canvasCtx.lineWidth = 3;
 
-  connections.forEach(([start, end]) => {
+  CONNECTIONS.forEach(([start, end]) => {
     const startPoint = landmarks[start];
     const endPoint = landmarks[end];
     canvasCtx.beginPath();
@@ -219,8 +219,8 @@ const drawHandAnnotations = (landmarks) => {
   landmarks.forEach((landmark, index) => {
     const x = landmark.x * canvasWidth;
     const y = landmark.y * canvasHeight;
-    const tipIds = [4, 8, 12, 16, 20];
-    const isTip = tipIds.includes(index);
+    const TIP_IDS = [4, 8, 12, 16, 20];
+    const isTip = TIP_IDS.includes(index);
 
     canvasCtx.beginPath();
     canvasCtx.arc(x, y, isTip ? 15 : 10, 0, 2 * Math.PI);
@@ -330,8 +330,8 @@ const simulateHandDetection = () => {
     if (!isCameraActive.value) return;
     if (Math.random() > 0.7) {
       isHandDetected.value = true;
-      const letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
-      const letter = letters[Math.floor(Math.random() * letters.length)];
+      const LETTERS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+      const letter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
       detectedLetter.value = letter;
       recognizedText.value = letter;
       gestureConfidence.value = 100;

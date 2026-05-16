@@ -151,15 +151,15 @@ export class SignDetector {
 
   _analyzeHandCurvature(landmarks) {
     let curvedCount = 0;
-    const tips = [8, 12, 16, 20];
-    const pips = [6, 10, 14, 18];
-    const mcps = [5, 9, 13, 17];
+    const TIPS = [8, 12, 16, 20];
+    const PIPS = [6, 10, 14, 18];
+    const MCPS = [5, 9, 13, 17];
 
     for (let i = 0; i < 4; i++) {
       const angle = this._calculateAngle(
-        landmarks[mcps[i]],
-        landmarks[pips[i]],
-        landmarks[tips[i]],
+        landmarks[MCPS[i]],
+        landmarks[PIPS[i]],
+        landmarks[TIPS[i]],
       );
       if (angle < 140) curvedCount++;
     }
