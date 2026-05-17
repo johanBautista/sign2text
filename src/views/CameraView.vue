@@ -16,9 +16,21 @@ const recognizedText = ref("");
 const cameraStream = ref(null);
 const gestureConfidence = ref(0);
 const detectedLetter = ref("");
+const currentHandedness = ref("Unknown");
 const showLandmarkNumbers = ref(true);
 const savedWord = ref("");
 const saveAnimation = ref(false);
+
+// La UI está espejada por CSS, pero el frame enviado al modelo no se espeja.
+const MODEL_INPUT_IS_MIRRORED = false;
+
+// Estabilización temporal de predicciones (US-01)
+const PREDICTION_WINDOW_SIZE = 12;
+const STABILITY_DURATION_MS = 400;
+const MIN_MAJORITY_RATIO = 0.6;
+const predictionHistory = [];
+let candidateLetter = "";
+let candidateSince = 0;
 
 // Instancias de MediaPipe
 let hands = null;
@@ -76,14 +88,45 @@ const initializeMediaPipe = async () => {
   }
 };
 
-// Detectar estado de los dedos (lógica simple y probada)
-const detectFingers = (landmarks) => {
-  if (!landmarks || landmarks.length === 0) {
+const distance2D = (p1, p2) => {
+  const dx = p1.x - p2.x;
+  const dy = p1.y - p2.y;
+  return Math.sqrt(dx * dx + dy * dy);
+};
+
+const getPalmScale = (hand) => {
+  const palmWidth = distance2D(hand[5], hand[17]);
+  const palmHeight = distance2D(hand[0], hand[9]);
+  return Math.max(0.06, (palmWidth + palmHeight) / 2);
+};
+
+const resolveHandedness = (results) => {
+  const firstHandedness = results?.multiHandedness?.[0];
+  const rawLabel =
+    firstHandedness?.label || firstHandedness?.classification?.[0]?.label || "";
+
+  if (rawLabel !== "Left" && rawLabel !== "Right") {
+    return "Unknown";
+  }
+
+  if (MODEL_INPUT_IS_MIRRORED) {
+    return rawLabel;
+  }
+
+  // MediaPipe etiqueta handedness asumiendo entrada espejo (selfie).
+  return rawLabel === "Left" ? "Right" : "Left";
+};
+
+// Detectar estado de los dedos (lógica con handedness)
+const detectFingers = (handLandmarks, handedness) => {
+  if (!handLandmarks || handLandmarks.length === 0) {
     return [0, 0, 0, 0, 0];
   }
 
-  const hand = landmarks[0];
+  const hand = handLandmarks;
   const fingers = [0, 0, 0, 0, 0];
+  const palmScale = getPalmScale(hand);
+  const nonThumbExtensionThreshold = Math.max(0.012, palmScale * 0.2);
 
   // Landmarks indices según MediaPipe
   const TIP_IDS = [4, 8, 12, 16, 20]; // Puntas de los dedos
@@ -94,56 +137,157 @@ const detectFingers = (landmarks) => {
     const tipY = hand[TIP_IDS[i]].y;
     const pipY = hand[PIP_IDS[i]].y;
 
-    // Lógica especial para el pulgar (usa X en lugar de Y)
+    // Pulgar ajustado por orientación de mano y modo espejo
     if (i === 0) {
-      const tipX = hand[TIP_IDS[i]].x;
-      const pipX = hand[PIP_IDS[i]].x;
-      // En cámara espejo: pulgar extendido está a la izquierda visualmente
-      // En coordenadas: depende de si está escalado
-      fingers[i] = Math.abs(tipX - pipX) > 0.05 ? 1 : 0;
+      const wrist = hand[0];
+      const thumbTip = hand[TIP_IDS[i]];
+      const thumbIp = hand[PIP_IDS[i]];
+      const thumbMcp = hand[2];
+      const thumbSpread = Math.abs(thumbTip.x - thumbIp.x);
+      const thumbSpreadThreshold = Math.max(0.015, palmScale * 0.16);
+
+      if (handedness === "Left" || handedness === "Right") {
+        const expectedThumbSign = handedness === "Right" ? -1 : 1;
+        const thumbDirectionScore =
+          (thumbTip.x - thumbIp.x) * expectedThumbSign;
+        const directionThreshold = Math.max(0.012, palmScale * 0.14);
+
+        const tipToWrist = distance2D(thumbTip, wrist);
+        const mcpToWrist = distance2D(thumbMcp, wrist);
+        const thumbIsFarFromPalm =
+          tipToWrist - mcpToWrist > Math.max(0.01, palmScale * 0.08);
+
+        fingers[i] =
+          thumbDirectionScore > directionThreshold &&
+          thumbSpread > thumbSpreadThreshold &&
+          thumbIsFarFromPalm
+            ? 1
+            : 0;
+      } else {
+        // Fallback cuando no hay handedness disponible
+        const tipToWrist = distance2D(thumbTip, wrist);
+        const mcpToWrist = distance2D(thumbMcp, wrist);
+        fingers[i] =
+          thumbSpread > thumbSpreadThreshold &&
+          tipToWrist - mcpToWrist > Math.max(0.01, palmScale * 0.08)
+            ? 1
+            : 0;
+      }
     } else {
-      // Para los otros 4 dedos: extendido si punta está arriba del nudillo
-      // En MediaPipe: Y menor = arriba
-      fingers[i] = tipY < pipY ? 1 : 0;
+      // Para los otros 4 dedos se usa un margen dinámico normalizado por palma.
+      const extensionAmount = pipY - tipY;
+      const tipToWrist = distance2D(hand[TIP_IDS[i]], hand[0]);
+      const pipToWrist = distance2D(hand[PIP_IDS[i]], hand[0]);
+      const isForwardEnough =
+        tipToWrist - pipToWrist > Math.max(0.006, palmScale * 0.04);
+
+      fingers[i] =
+        extensionAmount > nonThumbExtensionThreshold && isForwardEnough ? 1 : 0;
     }
   }
 
   return fingers;
 };
 
-// Reconocer letra basada en patrones de dedos (LSE)
-const recognizeLetter = (fingers) => {
+const recognizeLetterBinary = (fingers) => {
   const pattern = fingers.join("");
 
   const LETTER_PATTERNS = {
-    "10000": "A", // Puño con pulgar arriba
+    10000: "A", // Puño con pulgar arriba
     "01000": "D", // Índice arriba, resto cerrado
     "01100": "K", // Índice y medio arriba
     "01110": "W", // Índice, medio y anular arriba
-    "11111": "B", // Todos los dedos arriba
+    11111: "B", // Todos los dedos arriba
     "00000": "S", // Puño cerrado
-    "10001": "Y", // Pulgar y meñique extendidos
-    "11000": "L", // Pulgar e índice en forma de L
+    10001: "Y", // Pulgar y meñique extendidos
+    11000: "L", // Pulgar e índice en forma de L
     "00001": "I", // Solo meñique
     "01101": "F", // Índice, medio y meñique
     "01010": "U", // Índice y anular juntos
     "01001": "J", // Meñique e índice
     "00100": "G", // Solo dedo medio
     "00010": "H", // Solo anular
-    "10100": "R", // Pulgar y medio
-    "10111": "C", // Pulgar y 3 dedos (simplificado)
-    "11001": "E", // Pulgar e índice+meñique
-    "11110": "N", // Todos menos meñique
-    "11101": "M", // Todos menos anular
+    10100: "R", // Pulgar y medio
+    10111: "C", // Pulgar y 3 dedos (simplificado)
+    11001: "E", // Pulgar e índice+meñique
+    11110: "N", // Todos menos meñique
+    11101: "M", // Todos menos anular
     "01011": "P", // Índice, anular y meñique
     "00110": "Q", // Medio y anular
     "00101": "T", // Medio y meñique
     "01111": "V", // Índice, medio, anular, meñique
-    "11011": "X", // Pulgar, índice y meñique
-    "11100": "Z", // Pulgar, índice y medio
+    11011: "X", // Pulgar, índice y meñique
+    11100: "Z", // Pulgar, índice y medio
   };
 
   return LETTER_PATTERNS[pattern] || "";
+};
+
+const resetPredictionStabilizer = () => {
+  predictionHistory.length = 0;
+  candidateLetter = "";
+  candidateSince = 0;
+};
+
+const getMajorityPrediction = () => {
+  if (!predictionHistory.length) {
+    return { letter: "", ratio: 0 };
+  }
+
+  const counts = new Map();
+  predictionHistory.forEach((letter) => {
+    counts.set(letter, (counts.get(letter) || 0) + 1);
+  });
+
+  let topLetter = "";
+  let topCount = 0;
+  counts.forEach((count, letter) => {
+    if (count > topCount) {
+      topLetter = letter;
+      topCount = count;
+    }
+  });
+
+  return {
+    letter: topLetter,
+    ratio: topCount / predictionHistory.length,
+  };
+};
+
+const processStablePrediction = (rawLetter) => {
+  const normalizedLetter = rawLetter || "";
+  predictionHistory.push(normalizedLetter);
+  if (predictionHistory.length > PREDICTION_WINDOW_SIZE) {
+    predictionHistory.shift();
+  }
+
+  const majority = getMajorityPrediction();
+  gestureConfidence.value = Math.round(majority.ratio * 100);
+
+  // Si la mayoría actual no es una letra válida, no hay letra estable
+  if (!majority.letter) {
+    detectedLetter.value = "";
+    recognizedText.value = "";
+    candidateLetter = "";
+    candidateSince = 0;
+    return;
+  }
+
+  if (majority.letter !== candidateLetter) {
+    candidateLetter = majority.letter;
+    candidateSince = Date.now();
+  }
+
+  const isStableByTime = Date.now() - candidateSince >= STABILITY_DURATION_MS;
+  const isStableByMajority = majority.ratio >= MIN_MAJORITY_RATIO;
+
+  if (isStableByTime && isStableByMajority) {
+    detectedLetter.value = majority.letter;
+    recognizedText.value = majority.letter;
+  } else {
+    detectedLetter.value = "";
+    recognizedText.value = "";
+  }
 };
 
 // Callback de MediaPipe
@@ -151,7 +295,12 @@ const onHandsResults = (results) => {
   if (!canvasCtx || !videoElement.value || !canvasElement.value) return;
 
   canvasCtx.save();
-  canvasCtx.clearRect(0, 0, canvasElement.value.width, canvasElement.value.height);
+  canvasCtx.clearRect(
+    0,
+    0,
+    canvasElement.value.width,
+    canvasElement.value.height,
+  );
 
   canvasCtx.drawImage(
     videoElement.value,
@@ -163,23 +312,18 @@ const onHandsResults = (results) => {
 
   if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
     isHandDetected.value = true;
+    const handedness = resolveHandedness(results);
+    currentHandedness.value = handedness;
 
-    const fingers = detectFingers(results.multiHandLandmarks);
-    const letter = recognizeLetter(fingers);
-
-    detectedLetter.value = letter;
-    gestureConfidence.value = letter ? 100 : 0;
-
-    if (letter) {
-      recognizedText.value = letter;
-    } else {
-      const extendedCount = fingers.reduce((a, b) => a + b, 0);
-      recognizedText.value = extendedCount > 0 ? extendedCount.toString() : "";
-    }
+    const fingers = detectFingers(results.multiHandLandmarks[0], handedness);
+    const letter = recognizeLetterBinary(fingers);
+    processStablePrediction(letter);
 
     drawHandAnnotations(results.multiHandLandmarks[0]);
   } else {
     isHandDetected.value = false;
+    currentHandedness.value = "Unknown";
+    resetPredictionStabilizer();
     gestureConfidence.value = 0;
     recognizedText.value = "";
     detectedLetter.value = "";
@@ -193,11 +337,26 @@ const drawHandAnnotations = (landmarks) => {
   if (!landmarks || !canvasCtx || !canvasElement.value) return;
 
   const CONNECTIONS = [
-    [0, 1], [1, 2], [2, 3], [3, 4],
-    [0, 5], [5, 6], [6, 7], [7, 8],
-    [5, 9], [9, 10], [10, 11], [11, 12],
-    [9, 13], [13, 14], [14, 15], [15, 16],
-    [13, 17], [17, 18], [18, 19], [19, 20],
+    [0, 1],
+    [1, 2],
+    [2, 3],
+    [3, 4],
+    [0, 5],
+    [5, 6],
+    [6, 7],
+    [7, 8],
+    [5, 9],
+    [9, 10],
+    [10, 11],
+    [11, 12],
+    [9, 13],
+    [13, 14],
+    [14, 15],
+    [15, 16],
+    [13, 17],
+    [17, 18],
+    [18, 19],
+    [19, 20],
     [0, 17],
   ];
 
@@ -306,7 +465,9 @@ const startCamera = async () => {
           } catch (error) {}
           if (isCameraActive.value) requestAnimationFrame(processFrame);
         };
-        videoElement.value.addEventListener("loadedmetadata", () => processFrame());
+        videoElement.value.addEventListener("loadedmetadata", () =>
+          processFrame(),
+        );
         if (videoElement.value.readyState >= 2) processFrame();
       }
     } else {
@@ -330,7 +491,34 @@ const simulateHandDetection = () => {
     if (!isCameraActive.value) return;
     if (Math.random() > 0.7) {
       isHandDetected.value = true;
-      const LETTERS = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+      const LETTERS = [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z",
+      ];
       const letter = LETTERS[Math.floor(Math.random() * LETTERS.length)];
       detectedLetter.value = letter;
       recognizedText.value = letter;
@@ -357,9 +545,16 @@ const stopCamera = () => {
       cameraStream.value = null;
     }
     if (canvasCtx && canvasElement.value) {
-      canvasCtx.clearRect(0, 0, canvasElement.value.width, canvasElement.value.height);
+      canvasCtx.clearRect(
+        0,
+        0,
+        canvasElement.value.width,
+        canvasElement.value.height,
+      );
     }
     if (videoElement.value) videoElement.value.srcObject = null;
+    currentHandedness.value = "Unknown";
+    resetPredictionStabilizer();
     isCameraActive.value = false;
     isHandDetected.value = false;
     recognizedText.value = "";
@@ -377,7 +572,9 @@ const saveResult = () => {
   if (detectedLetter.value) {
     savedWord.value += detectedLetter.value;
     saveAnimation.value = true;
-    setTimeout(() => { saveAnimation.value = false; }, 500);
+    setTimeout(() => {
+      saveAnimation.value = false;
+    }, 500);
   }
 };
 
@@ -408,7 +605,9 @@ onUnmounted(() => {
         </h1>
         <div v-if="isHandDetected" class="absolute top-4 left-6">
           <div class="badge-success">
-            <div class="w-2 h-2 bg-success rounded-full mr-2 animate-pulse"></div>
+            <div
+              class="w-2 h-2 bg-success rounded-full mr-2 animate-pulse"
+            ></div>
             {{ t("camera.handDetected") }}
           </div>
         </div>
@@ -455,7 +654,9 @@ onUnmounted(() => {
                 class="text-6xl mb-4 opacity-50 text-gray-400"
               />
               <p class="text-gray-500">{{ t("camera.cameraPreview") }}</p>
-              <p class="text-xs text-gray-400 mt-2">MediaPipe detection ready</p>
+              <p class="text-xs text-gray-400 mt-2">
+                MediaPipe detection ready
+              </p>
             </div>
           </div>
 
@@ -464,7 +665,9 @@ onUnmounted(() => {
             v-if="isCameraActive && detectedLetter"
             class="absolute top-4 left-4 right-4 z-30 flex justify-center"
           >
-            <div class="bg-success bg-opacity-90 text-white px-4 py-2 rounded-lg font-bold text-2xl">
+            <div
+              class="bg-success bg-opacity-90 text-white px-4 py-2 rounded-lg font-bold text-2xl"
+            >
               {{ detectedLetter }}
             </div>
           </div>
@@ -480,11 +683,11 @@ onUnmounted(() => {
                 'px-6 py-3 rounded-lg font-bold text-lg transition-all shadow-lg',
                 saveAnimation
                   ? 'bg-blue-500 text-white scale-110'
-                  : 'bg-success text-white hover:bg-opacity-90'
+                  : 'bg-success text-white hover:bg-opacity-90',
               ]"
             >
               <font-awesome-icon icon="plus" class="mr-2" />
-              {{ saveAnimation ? '¡Guardado!' : 'Guardar' }}
+              {{ saveAnimation ? "¡Guardado!" : "Guardar" }}
             </button>
             <button
               @click="addSpace"
@@ -531,7 +734,15 @@ onUnmounted(() => {
               </div>
               <div class="flex justify-between">
                 <span class="text-gray-600">Confianza:</span>
-                <span class="font-medium text-primary">{{ gestureConfidence }}%</span>
+                <span class="font-medium text-primary"
+                  >{{ gestureConfidence }}%</span
+                >
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">Mano:</span>
+                <span class="font-medium text-primary">{{
+                  currentHandedness
+                }}</span>
               </div>
             </div>
           </div>
@@ -550,7 +761,7 @@ onUnmounted(() => {
               </div>
               <div v-else class="text-2xl text-gray-400 mb-2">-</div>
               <div class="text-xs text-gray-500">
-                {{ detectedLetter ? "Alfabeto LSE" : "Sin reconocimiento" }}
+                {{ detectedLetter ? "Alfabeto LSE" : "Sin letra estable" }}
               </div>
             </div>
           </div>
@@ -604,7 +815,11 @@ onUnmounted(() => {
               Texto acumulado:
             </h3>
             <div class="bg-background rounded-lg p-4 max-h-32 overflow-y-auto">
-              <p class="text-lg font-bold text-primary break-words whitespace-pre-wrap">{{ savedWord }}</p>
+              <p
+                class="text-lg font-bold text-primary break-words whitespace-pre-wrap"
+              >
+                {{ savedWord }}
+              </p>
             </div>
           </div>
         </div>
