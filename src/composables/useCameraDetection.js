@@ -28,7 +28,7 @@ export function useCameraDetection() {
   const appendDetectedLetter = (letter) => {
     if (!letter) return;
 
-    savedWord.value += letter;
+    savedWord.value += letter === "_" ? " " : letter;
     saveAnimation.value = true;
     setTimeout(() => {
       saveAnimation.value = false;

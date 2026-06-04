@@ -4,7 +4,8 @@ import { ref, onMounted, onUnmounted, nextTick } from "vue";
 const videoEl = ref(null);
 const canvasEl = ref(null);
 
-const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ_".split("");
+// const spaceLabel = "_";
 const selectedLetter = ref("A");
 const dataset = ref([]);
 const isCapturing = ref(false);
@@ -193,7 +194,8 @@ function loadDataset(file) {
       data.samples.forEach((s) => {
         if (s.features && s.label) {
           dataset.value.push(s);
-          samplesPerLetter.value[s.label] = (samplesPerLetter.value[s.label] || 0) + 1;
+          samplesPerLetter.value[s.label] =
+            (samplesPerLetter.value[s.label] || 0) + 1;
           totalSamples.value++;
         }
       });

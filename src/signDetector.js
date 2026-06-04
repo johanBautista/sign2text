@@ -211,7 +211,8 @@ export class SignDetector {
     if (s.indexState === "extended" && s.middleState === "extended" && s.ringState === "folded") {
       return s.indexMiddleSeparation > 0.07 ? "V" : "U";
     }
-    if (s.indexState === "extended" && s.middleState === "extended" && s.ringState === "extended" && s.pinkyState === "extended") return "B";
+    if (s.thumbState === "extended" && s.indexState === "extended" && s.middleState === "extended" && s.ringState === "extended" && s.pinkyState === "extended") return "_";
+    if (s.thumbState === "folded" && s.indexState === "extended" && s.middleState === "extended" && s.ringState === "extended" && s.pinkyState === "extended") return "B";
     if (s.thumbState === "extended" && s.indexState === "folded" && s.pinkyState === "folded") return "A";
     if (s.indexState === "folded" && s.middleState === "folded" && s.ringState === "folded" && s.pinkyState === "folded") {
       return s.thumbState === "crossed" ? "S" : "E";
