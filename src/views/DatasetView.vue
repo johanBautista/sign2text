@@ -209,6 +209,13 @@ function triggerLoad() {
   fileInput.value?.click();
 }
 
+function clearLetter(letter) {
+  dataset.value = dataset.value.filter((s) => s.label !== letter);
+  samplesPerLetter.value[letter] = 0;
+  totalSamples.value = dataset.value.length;
+  statusMessage.value = `Muestras de "${letter}" eliminadas`;
+}
+
 function clearDataset() {
   dataset.value = [];
   totalSamples.value = 0;
@@ -379,6 +386,7 @@ onUnmounted(() => stopCamera());
           v-for="l in letters"
           :key="l"
           @click="selectedLetter = l"
+          @dblclick="clearLetter(l)"
           :class="[
             'w-9 h-9 rounded-lg text-sm font-bold transition-all',
             selectedLetter === l
