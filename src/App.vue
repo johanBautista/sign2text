@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, provide } from "vue";
+import { ref, computed, provide, defineAsyncComponent } from "vue";
 import { useI18n } from "vue-i18n";
 
 // Componentes de vistas
@@ -39,6 +39,12 @@ const navItems = computed(() => [
     label: t("nav.about"),
     icon: "info-circle",
     component: AboutView,
+  },
+  {
+    id: "dataset",
+    label: t("nav.dataset"),
+    icon: "bullseye",
+    component: defineAsyncComponent(() => import("./views/DatasetView.vue")),
   },
 ]);
 

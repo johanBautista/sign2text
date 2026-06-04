@@ -4,6 +4,7 @@ export default {
     home: "Home",
     camera: "Camera",
     guide: "Guide",
+    dataset: "Dataset",
     about: "About",
   },
 

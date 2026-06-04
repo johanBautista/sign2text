@@ -12,6 +12,7 @@ export function createLetterDetectionEngine(options = {}) {
   } = options;
 
   const signDetector = new SignDetector();
+  signDetector.load();
 
   const predictionHistory = [];
   let candidateLetter = "";
@@ -261,28 +262,27 @@ export function createLetterDetectionEngine(options = {}) {
       return binaryMatch;
     }
 
-    const detectorLetter = signDetector.detectLetter(handLandmarks);
-
-    if (detectorLetter && binaryMatch.letter === detectorLetter) {
-      return { letter: detectorLetter, confidencePercent: 95 };
-    }
-
-    if (detectorLetter && !binaryMatch.letter) {
-      return { letter: detectorLetter, confidencePercent: 85 };
-    }
-
-    if (!detectorLetter && binaryMatch.letter) {
-      return binaryMatch;
-    }
-
-    if (
-      detectorLetter &&
+    const modelResult = signDetector.predict(handLandmarks);
+    const bothAgree = modelResult.letter &&
       binaryMatch.letter &&
-      detectorLetter !== binaryMatch.letter
-    ) {
-      // Si hay conflicto, priorizamos SignDetector pero bajamos confianza
-      // para evitar auto-guardados falsos por ambiguedad.
-      return { letter: detectorLetter, confidencePercent: 65 };
+      modelResult.letter === binaryMatch.letter;
+
+    if (bothAgree) {
+      return {
+        letter: modelResult.letter,
+        confidencePercent: Math.max(modelResult.confidence, 90),
+      };
+    }
+
+    if (modelResult.letter) {
+      return {
+        letter: modelResult.letter,
+        confidencePercent: modelResult.confidence,
+      };
+    }
+
+    if (binaryMatch.letter) {
+      return binaryMatch;
     }
 
     return { letter: "", confidencePercent: 0 };

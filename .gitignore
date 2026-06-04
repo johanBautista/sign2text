@@ -22,3 +22,14 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Compilación y Apps Móviles
+build/
+android/
+ios/
