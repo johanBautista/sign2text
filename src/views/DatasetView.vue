@@ -5,7 +5,6 @@ const videoEl = ref(null);
 const canvasEl = ref(null);
 
 const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ_".split("");
-// const spaceLabel = "_";
 const selectedLetter = ref("A");
 const dataset = ref([]);
 const isCapturing = ref(false);

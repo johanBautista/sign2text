@@ -40,12 +40,13 @@ const navItems = computed(() => [
     icon: "info-circle",
     component: AboutView,
   },
-  {
-    id: "dataset",
-    label: t("nav.dataset"),
-    icon: "bullseye",
-    component: defineAsyncComponent(() => import("./views/DatasetView.vue")),
-  },
+  // Dataset training view (opcional, se puede activar para desarrollo o pruebas)
+  // {
+  //   id: "dataset",
+  //   label: t("nav.dataset"),
+  //   icon: "bullseye",
+  //   component: defineAsyncComponent(() => import("./views/DatasetView.vue")),
+  // },
 ]);
 
 // Funciones de navegación
